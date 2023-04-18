@@ -15,6 +15,8 @@ LOGGING = os.getenv("RPN_LOGGING", "FALSE")
 YAML_KEY_APPRISE = "apprise"
 YAML_KEY_REDDIT = "reddit"
 YAML_KEY_SUBREDDITS = "subreddits"
+YAML_KEY_SUBREDDITS_INCLUDE = "include"
+YAML_KEY_SUBREDDITS_EXCLUDE = "exclude"
 YAML_KEY_CLIENT = "client"
 YAML_KEY_SECRET = "secret"
 YAML_KEY_AGENT = "agent"
@@ -66,8 +68,10 @@ def process_submission(submission, subreddits, apprise_client):
     title = submission.title
     sub = submission.subreddit.display_name
     search_terms = subreddits[sub.lower()]
+    include_terms = search_terms[YAML_KEY_SUBREDDITS_INCLUDE]
+    exclude_terms = search_terms[YAML_KEY_SUBREDDITS_EXCLUDE]
 
-    if any(term in title.lower() for term in search_terms):
+    if any(term in title.lower() for term in include_terms) and not any(term in title.lower() for term in exclude_terms):
         notify(apprise_client, title, submission.id)
         if LOGGING != "FALSE":
             print(datetime.datetime.fromtimestamp(submission.created_utc),
