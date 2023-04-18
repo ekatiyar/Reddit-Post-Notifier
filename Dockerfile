@@ -1,6 +1,6 @@
 FROM python:3.9-alpine
 
-LABEL org.opencontainers.image.source https://github.com/RafhaanShah/Reddit-Post-Notifier
+LABEL org.opencontainers.image.source https://github.com/ThinkSalat/Reddit-Post-Notifier
 
 ENV PYTHONUNBUFFERED 1
 
