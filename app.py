@@ -71,8 +71,8 @@ def process_submission(submission, subreddits, apprise_client):
     include_terms = search_terms[YAML_KEY_SUBREDDITS_INCLUDE]
     exclude_terms = search_terms[YAML_KEY_SUBREDDITS_EXCLUDE]
 
-    contains_included_term = any(term in title.lower() for term in include_terms) or not include_terms
-    contains_excluded_term = any(term in title.lower() for term in exclude_terms)
+    contains_included_term = not include_terms or any(term in title.lower() for term in include_terms)
+    contains_excluded_term = exclude_terms and any(term in title.lower() for term in exclude_terms)
 
     if contains_included_term and not contains_excluded_term:
         notify(apprise_client, title, submission.id)
@@ -170,10 +170,14 @@ def validate_config(config):
 
     subs = reddit[YAML_KEY_SUBREDDITS]
     for conf in subs:
-        current = subs[conf]
-
-        subs[conf] = [x.lower() for x in current]
-        print("\tr/" + conf + ": ", current)
+        include_list = subs[conf][YAML_KEY_SUBREDDITS_INCLUDE]
+        exclude_list = subs[conf][YAML_KEY_SUBREDDITS_EXCLUDE]
+        if include_list:
+            subs[conf][YAML_KEY_SUBREDDITS_INCLUDE] = [x.lower() for x in include_list]
+            print("\tr/" + conf + ": ", include_list)
+        if exclude_list:
+            subs[conf][YAML_KEY_SUBREDDITS_EXCLUDE] = [x.lower() for x in exclude_list]
+            print("\tr/" + conf + ": ", exclude_list)
 
     print("")
     reddit[YAML_KEY_SUBREDDITS] = {k.lower(): v for k, v in subs.items()}
