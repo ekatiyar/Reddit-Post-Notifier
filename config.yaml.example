@@ -10,11 +10,15 @@ reddit:
     
   subreddits:
     gamedeals:
-      - 'free'
-      - '100%'
-      - 'cyberpunk'
+      include:
+        - 'free'
+        - '100%'
+        - 'cyberpunk'
+      exclude:
+        - 'discount'
 
     buildapcsalesuk:
-      - '3080'
-      - 'ssd'
-      - 'razer'
+      include:
+        - '3080'
+        - 'ssd'
+        - 'razer'
