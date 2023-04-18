@@ -172,12 +172,6 @@ def validate_config(config):
     for conf in subs:
         current = subs[conf]
 
-        if not isinstance(current, list) or not current:
-            sys.exit("Invalid config: \'" + conf + "\' needs a list of search strings")
-
-        if not all(isinstance(item, str) for item in current):
-            sys.exit("Invalid config: \'" + conf + "\' needs a list of search strings")
-
         subs[conf] = [x.lower() for x in current]
         print("\tr/" + conf + ": ", current)
 
