@@ -35,8 +35,12 @@ The configuration is stored inside a yaml file, you can copy `config.yaml.exampl
 	```
 	  subreddits:
 	    gamedeals:
-	      - 'free'
-	      - '100%'
+			include:
+				- 'free'
+				- '100%'
+			exlude:
+				- 'minecraft'
+				- 'call of duty'
 	```
 
 ### Optional
