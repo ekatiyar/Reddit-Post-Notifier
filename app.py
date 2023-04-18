@@ -71,7 +71,10 @@ def process_submission(submission, subreddits, apprise_client):
     include_terms = search_terms[YAML_KEY_SUBREDDITS_INCLUDE]
     exclude_terms = search_terms[YAML_KEY_SUBREDDITS_EXCLUDE]
 
-    if any(term in title.lower() for term in include_terms) and not any(term in title.lower() for term in exclude_terms):
+    contains_included_term = any(term in title.lower() for term in include_terms) or not include_terms
+    contains_excluded_term = any(term in title.lower() for term in exclude_terms)
+
+    if contains_included_term and not contains_excluded_term:
         notify(apprise_client, title, submission.id)
         if LOGGING != "FALSE":
             print(datetime.datetime.fromtimestamp(submission.created_utc),
