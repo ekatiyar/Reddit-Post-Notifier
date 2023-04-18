@@ -48,6 +48,7 @@ def stream_submissions(reddit, subreddits, apprise_client):
     subs_joined = "+".join(subs)
     subreddit = reddit.subreddit(subs_joined)
 
+    print("Monitoring begin")
     while True:
         try:
             for submission in subreddit.stream.submissions(pause_after=None, skip_existing=True):
