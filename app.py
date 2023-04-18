@@ -38,6 +38,7 @@ def main():
     )
 
     validate_subreddits(reddit_client, subreddits)
+    print("going to stream submissions")
     stream_submissions(reddit_client, subreddits, apprise_client)
 
 
@@ -50,6 +51,7 @@ def stream_submissions(reddit, subreddits, apprise_client):
     while True:
         try:
             for submission in subreddit.stream.submissions(pause_after=None, skip_existing=True):
+                print(submission)
                 process_submission(submission, subreddits, apprise_client)
 
         except KeyboardInterrupt:
