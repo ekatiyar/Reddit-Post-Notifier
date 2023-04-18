@@ -68,8 +68,8 @@ def process_submission(submission, subreddits, apprise_client):
     title = submission.title
     sub = submission.subreddit.display_name
     search_terms = subreddits[sub.lower()]
-    include_terms = search_terms[YAML_KEY_SUBREDDITS_INCLUDE]
-    exclude_terms = search_terms[YAML_KEY_SUBREDDITS_EXCLUDE]
+    include_terms = search_terms[YAML_KEY_SUBREDDITS_INCLUDE] or []
+    exclude_terms = search_terms[YAML_KEY_SUBREDDITS_EXCLUDE] or []
 
     contains_included_term = not include_terms or any(term in title.lower() for term in include_terms)
     contains_excluded_term = exclude_terms and any(term in title.lower() for term in exclude_terms)
@@ -171,6 +171,7 @@ def validate_config(config):
     subreddits = reddit[YAML_KEY_SUBREDDITS]
     print("")
     reddit[YAML_KEY_SUBREDDITS] = {k.lower(): v for k, v in subreddits.items()}
+    print(config)
     return config
 
 
