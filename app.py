@@ -168,19 +168,9 @@ def validate_config(config):
 
     print("Monitoring Reddit for:")
 
-    subs = reddit[YAML_KEY_SUBREDDITS]
-    for conf in subs:
-        include_list = subs[conf][YAML_KEY_SUBREDDITS_INCLUDE]
-        exclude_list = subs[conf][YAML_KEY_SUBREDDITS_EXCLUDE]
-        if include_list:
-            subs[conf][YAML_KEY_SUBREDDITS_INCLUDE] = [x.lower() for x in include_list]
-            print("\tr/" + conf + ": ", include_list)
-        if exclude_list:
-            subs[conf][YAML_KEY_SUBREDDITS_EXCLUDE] = [x.lower() for x in exclude_list]
-            print("\tr/" + conf + ": ", exclude_list)
-
+    subreddits = reddit[YAML_KEY_SUBREDDITS]
     print("")
-    reddit[YAML_KEY_SUBREDDITS] = {k.lower(): v for k, v in subs.items()}
+    reddit[YAML_KEY_SUBREDDITS] = {k.lower(): v for k, v in subreddits.items()}
     return config
 
 
