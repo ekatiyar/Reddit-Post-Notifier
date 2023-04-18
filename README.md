@@ -52,7 +52,7 @@ version: "3.8"
 services:
   reddit-post-notifier:
     container_name: reddit-post-notifier
-    image: ghcr.io/rafhaanshah/reddit-post-notifier:latest
+    image: ghcr.io/thinksalat/reddit-post-notifier:latest
     restart: unless-stopped
     volumes:
         - ./config.yaml:/app/config.yaml	
