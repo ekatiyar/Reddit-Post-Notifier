@@ -68,21 +68,30 @@ def stream_submissions(reddit, subreddits, apprise_client):
 
 def process_submission(submission, subreddits, apprise_client):
     """Notify if given submission matches search."""
+    print("checking submission: ")
+    print(submission)
     title = submission.title
     sub = submission.subreddit.display_name
     search_terms = subreddits[sub.lower()]
-    include_terms = search_terms[YAML_KEY_SUBREDDITS_INCLUDE] or []
-    exclude_terms = search_terms[YAML_KEY_SUBREDDITS_EXCLUDE] or []
+    include_terms = []
+    exclude_terms = []
+    if search_terms is not None:
+        if search_terms[YAML_KEY_SUBREDDITS_INCLUDE] is not None:
+            include_terms = search_terms[YAML_KEY_SUBREDDITS_INCLUDE]
+        if search_terms[YAML_KEY_SUBREDDITS_EXCLUDE] is not None:
+            exclude_terms = search_terms[YAML_KEY_SUBREDDITS_EXCLUDE]
 
     contains_included_term = not include_terms or any(term in title.lower() for term in include_terms)
     contains_excluded_term = exclude_terms and any(term in title.lower() for term in exclude_terms)
 
     if contains_included_term and not contains_excluded_term:
+        print("submission match")
         notify(apprise_client, title, submission.id)
         if LOGGING != "FALSE":
             print(datetime.datetime.fromtimestamp(submission.created_utc),
                   " " + "r/" + sub + ": " + title)
-
+    else:
+        print("Submission non match")
 
 def notify(apprise_client, title, submission_id):
     """Send apprise notification."""
