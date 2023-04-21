@@ -38,6 +38,11 @@ def main():
     )
 
     validate_subreddits(reddit_client, subreddits)
+
+    print("Testing notification system: ")
+    notify(apprise_client, "test", "test")
+    print("Notification sent.")
+
     print("going to stream submissions")
     stream_submissions(reddit_client, subreddits, apprise_client)
 
