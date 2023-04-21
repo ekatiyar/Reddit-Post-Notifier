@@ -52,7 +52,6 @@ def stream_submissions(reddit, subreddits, apprise_client):
     while True:
         try:
             for submission in subreddit.stream.submissions(pause_after=None, skip_existing=True):
-                print(submission)
                 process_submission(submission, subreddits, apprise_client)
 
         except KeyboardInterrupt:
@@ -69,7 +68,6 @@ def stream_submissions(reddit, subreddits, apprise_client):
 def process_submission(submission, subreddits, apprise_client):
     """Notify if given submission matches search."""
     print("checking submission: ")
-    print(submission)
     title = submission.title
     sub = submission.subreddit.display_name
     search_terms = subreddits[sub.lower()]
@@ -83,7 +81,9 @@ def process_submission(submission, subreddits, apprise_client):
 
     contains_included_term = not include_terms or any(term in title.lower() for term in include_terms)
     contains_excluded_term = exclude_terms and any(term in title.lower() for term in exclude_terms)
-
+    print("include terms: ", include_terms)
+    print("exclude terms: ", exclude_terms)
+    print("submission : ", submission, title, )
     if contains_included_term and not contains_excluded_term:
         print("submission match")
         notify(apprise_client, title, submission.id)
@@ -95,6 +95,7 @@ def process_submission(submission, subreddits, apprise_client):
 
 def notify(apprise_client, title, submission_id):
     """Send apprise notification."""
+    print("Sending apprise notification")
     apprise_client.notify(
         title=title,
         body="https://www.reddit.com/" + submission_id,
