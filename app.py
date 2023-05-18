@@ -30,7 +30,7 @@ def main():
     reddit_config = config[YAML_KEY_REDDIT]
 
     subreddits = reddit_config[YAML_KEY_SUBREDDITS]
-    apprise_client = get_apprise_client(apprise_config)
+    apprise_client = apprise.Apprise()
     reddit_client = get_reddit_client(
         reddit_config[YAML_KEY_CLIENT],
         reddit_config[YAML_KEY_SECRET],
@@ -99,10 +99,13 @@ def process_submission(submission, subreddits, apprise_client):
 def notify(apprise_client, title, submission_id):
     """Send apprise notification."""
     print("Sending apprise notification")
+    reddit_url = "https://www.reddit.com/" + submission_id
+    configure_apprise_notifications(apprise_client, reddit_url)
     apprise_client.notify(
         title=title,
-        body="https://www.reddit.com/" + submission_id,
+        body=reddit_url,
     )
+    apprise_client.clear()
 
 
 def get_reddit_client(cid, secret, agent):
@@ -114,12 +117,19 @@ def get_reddit_client(cid, secret, agent):
     )
 
 
-def get_apprise_client(config):
+def configure_apprise_notifications(apprise_client, reddit_url):
     """Return Apprise instance."""
-    apprise_client = apprise.Apprise()
+    config = get_config()
+    apprise_config = config[YAML_KEY_APPRISE]
+    for conf in apprise_config:
+        service = conf.split(":")[0]
+        match service:
+            case "ntfy":
+                apprise_client.add(f"{conf}?click={reddit_url}")
+            case _:
+                apprise_client.add(conf)
 
-    for conf in config:
-        apprise_client.add(conf)
+
 
     return apprise_client
 
