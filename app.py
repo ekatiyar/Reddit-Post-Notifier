@@ -72,27 +72,34 @@ def stream_submissions(reddit, subreddits, apprise_client):
 
 def process_submission(submission, subreddits, apprise_client):
     """Notify if given submission matches search."""
+
     print("checking submission: ")
     title = submission.title
     sub = submission.subreddit.display_name
     search_terms = subreddits[sub.lower()]
+
     include_terms = []
     exclude_terms = []
+
     if search_terms is not None:
         include_terms = search_terms.get(YAML_KEY_SUBREDDITS_INCLUDE) or []
         exclude_terms = search_terms.get(YAML_KEY_SUBREDDITS_EXCLUDE) or []
 
-    contains_included_term = not include_terms or any(term in title.lower() for term in include_terms)
-    contains_excluded_term = exclude_terms and any(term in title.lower() for term in exclude_terms)
+    contains_included_term_title = not include_terms or any(term.lower() in title.lower() for term in include_terms)
+    contains_excluded_term_title = exclude_terms and any(term.lower() in title.lower() for term in exclude_terms)
+
+    contains_included_term_text = not include_terms or any(term.lower() in submission.selftext.lower() for term in include_terms)
+    contains_excluded_term_text = exclude_terms and any(term.lower() in submission.selftext.lower() for term in exclude_terms)
+
     print("include terms: ", include_terms)
     print("exclude terms: ", exclude_terms)
-    print("submission : ", submission, title, )
-    if contains_included_term and not contains_excluded_term:
+    print("submission : ", submission, title)
+
+    if (contains_included_term_title or contains_included_term_text) and not (contains_excluded_term_title or contains_excluded_term_text):
         print("submission match")
         notify(apprise_client, title, submission.id)
         if LOGGING != "FALSE":
-            print(datetime.datetime.fromtimestamp(submission.created_utc),
-                  " " + "r/" + sub + ": " + title)
+            print(datetime.datetime.fromtimestamp(submission.created_utc), " " + "r/" + sub + ": " + title)
     else:
         print("Submission non match")
 
