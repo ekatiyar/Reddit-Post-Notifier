@@ -9,11 +9,14 @@ import praw
 import prawcore
 import yaml
 
+import ai
+
 CONFIG_PATH = os.getenv("RPN_CONFIG", "config.yaml")
 LOGGING = os.getenv("RPN_LOGGING", "FALSE")
 
 YAML_KEY_APPRISE = "apprise"
 YAML_KEY_REDDIT = "reddit"
+YAML_KEY_AI = "openai"
 YAML_KEY_SUBREDDITS = "subreddits"
 YAML_KEY_SUBREDDITS_INCLUDE = "include"
 YAML_KEY_SUBREDDITS_EXCLUDE = "exclude"
@@ -26,8 +29,8 @@ def main():
     """Run application."""
     print("Starting Reddit Post Notifier")
     config = get_config()
-    apprise_config = config[YAML_KEY_APPRISE]
     reddit_config = config[YAML_KEY_REDDIT]
+    ai_config = config[YAML_KEY_AI]
 
     subreddits = reddit_config[YAML_KEY_SUBREDDITS]
     apprise_client = apprise.Apprise()
@@ -36,18 +39,23 @@ def main():
         reddit_config[YAML_KEY_SECRET],
         reddit_config[YAML_KEY_AGENT]
     )
+    ai_client = ai.Client(
+        url=ai_config[YAML_KEY_CLIENT],
+        api_key=ai_config[YAML_KEY_SECRET],
+        model=ai_config[YAML_KEY_AGENT],
+    )
 
     validate_subreddits(reddit_client, subreddits)
 
     print("Testing notification system: ")
-    notify(apprise_client, "test", "test")
+    notify(apprise_client, ai_client, "test", "test", "")
     print("Notification sent.")
 
     print("going to stream submissions")
-    stream_submissions(reddit_client, subreddits, apprise_client)
+    stream_submissions(reddit_client, subreddits, apprise_client, ai_client)
 
 
-def stream_submissions(reddit, subreddits, apprise_client):
+def stream_submissions(reddit, subreddits, apprise_client, ai_client):
     """Monitor and process new Reddit submissions in given subreddits."""
     subs = subreddits.keys()
     subs_joined = "+".join(subs)
@@ -57,7 +65,7 @@ def stream_submissions(reddit, subreddits, apprise_client):
     while True:
         try:
             for submission in subreddit.stream.submissions(pause_after=None, skip_existing=True):
-                process_submission(submission, subreddits, apprise_client)
+                process_submission(submission, subreddits, apprise_client, ai_client)
 
         except KeyboardInterrupt:
             sys.exit("\tStopping application, bye bye")
@@ -66,15 +74,21 @@ def stream_submissions(reddit, subreddits, apprise_client):
                 prawcore.exceptions.PrawcoreException) as exception:
             print("Reddit API Error: ")
             print(exception)
+            alert_error(apprise_client, exception)
             print("Pausing for 30 seconds...")
             time.sleep(30)
 
+def alert_error(apprise_client, exception):
+    """Send an alert to the apprise client."""
+    apprise_client.notify(title="[ERROR]", body=str(exception))
 
-def process_submission(submission, subreddits, apprise_client):
+
+def process_submission(submission, subreddits, apprise_client, ai_client):
     """Notify if given submission matches search."""
 
     print("checking submission: ")
     title = submission.title
+    body = submission.selftext
     sub = submission.subreddit.display_name
     search_terms = subreddits[sub.lower()]
 
@@ -88,8 +102,8 @@ def process_submission(submission, subreddits, apprise_client):
     contains_included_term_title = not include_terms or any(term.lower() in title.lower() for term in include_terms)
     contains_excluded_term_title = exclude_terms and any(term.lower() in title.lower() for term in exclude_terms)
 
-    contains_included_term_text = not include_terms or any(term.lower() in submission.selftext.lower() for term in include_terms)
-    contains_excluded_term_text = exclude_terms and any(term.lower() in submission.selftext.lower() for term in exclude_terms)
+    contains_included_term_text = not include_terms or any(term.lower() in body.lower() for term in include_terms)
+    contains_excluded_term_text = exclude_terms and any(term.lower() in body.lower() for term in exclude_terms)
 
     print("include terms: ", include_terms)
     print("exclude terms: ", exclude_terms)
@@ -97,20 +111,24 @@ def process_submission(submission, subreddits, apprise_client):
 
     if (contains_included_term_title or contains_included_term_text) and not (contains_excluded_term_title or contains_excluded_term_text):
         print("submission match")
-        notify(apprise_client, title, submission.id)
+
+        summarized_title = ai_client.generate_title(title, body, include_terms)
+        print(f"summarized title: {summarized_title}")
+
+        notify(apprise_client, summarized_title, title, body, submission.permalink)
         if LOGGING != "FALSE":
-            print(datetime.datetime.fromtimestamp(submission.created_utc), " " + "r/" + sub + ": " + title)
+            print(datetime.datetime.fromtimestamp(submission.created_utc), " " + "r/" + sub + ": " + title + "\n" + submission.permalink)
     else:
         print("Submission non match")
 
-def notify(apprise_client, title, submission_id):
+def notify(apprise_client, gen_title, orig_title, submission_id):
     """Send apprise notification."""
     print("Sending apprise notification")
-    reddit_url = "https://www.reddit.com/" + submission_id
+    reddit_url = "https://www.reddit.com" + submission_id
     configure_apprise_notifications(apprise_client, reddit_url)
     apprise_client.notify(
-        title=title,
-        body=reddit_url,
+        title=gen_title,
+        body=f'[{orig_title}]({reddit_url})',
     )
     apprise_client.clear()
 
@@ -136,8 +154,6 @@ def configure_apprise_notifications(apprise_client, reddit_url):
             case _:
                 apprise_client.add(conf)
 
-
-
     return apprise_client
 
 
@@ -158,7 +174,7 @@ def check_config_file():
 
 def load_config():
     """Load config into memory."""
-    with open(CONFIG_PATH, "r") as config_yaml:
+    with open(CONFIG_PATH, "r", encoding="utf-8") as config_yaml:
         config = None
 
         try:
@@ -167,7 +183,7 @@ def load_config():
         except yaml.YAMLError as exception:
             if hasattr(exception, "problem_mark"):
                 mark = exception.problem_mark # pylint: disable=no-member
-                print("Invalid yaml, line %s column %s" % (mark.line + 1, mark.column + 1))
+                print(f"Invalid yaml, line {mark.line + 1}, column {mark.column + 1}")
 
             sys.exit("Invalid config: failed to parse yaml")
 
