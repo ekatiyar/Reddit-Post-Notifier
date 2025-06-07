@@ -48,7 +48,9 @@ def main():
     validate_subreddits(reddit_client, subreddits)
 
     print("Testing notification system: ")
-    notify(apprise_client, ai_client, "test", "test", "")
+    title = "[USA-DC] [H] NVIDIA RTX 3090 Ti Founders Edition (FE) [W] Local Cash or PayPal"
+    body = "I am selling one NVIDIA GeForce 3090 Ti Founders Edition (FE) GPU. Original owner. Used for AI/ML side projects here and there.\n\nAsking for $1,200 shipped to CONUS, $1150 local.\n\n[Timestamp Video](https://imgur.com/a/o3OXWUi)\n\n*Replacing an earlier post with a mistake in the title.*"
+    notify(apprise_client, ai_client.generate_title(title, body, ["3090"]), title, "")
     print("Notification sent.")
 
     print("going to stream submissions")
@@ -80,8 +82,9 @@ def stream_submissions(reddit, subreddits, apprise_client, ai_client):
 
 def alert_error(apprise_client, exception):
     """Send an alert to the apprise client."""
+    configure_apprise_notifications(apprise_client, "")
     apprise_client.notify(title="[ERROR]", body=str(exception))
-
+    apprise_client.clear()
 
 def process_submission(submission, subreddits, apprise_client, ai_client):
     """Notify if given submission matches search."""
@@ -123,7 +126,7 @@ def process_submission(submission, subreddits, apprise_client, ai_client):
 
 def notify(apprise_client, gen_title, orig_title, submission_id):
     """Send apprise notification."""
-    print("Sending apprise notification")
+    print(f"Sending apprise notification {gen_title} <- {orig_title}")
     reddit_url = "https://www.reddit.com" + submission_id
     configure_apprise_notifications(apprise_client, reddit_url)
     apprise_client.notify(
@@ -131,6 +134,8 @@ def notify(apprise_client, gen_title, orig_title, submission_id):
         body=f'[{orig_title}]({reddit_url})',
     )
     apprise_client.clear()
+    if gen_title == orig_title:
+        alert_error(apprise_client, "Title Generation Failed. Check logs")
 
 
 def get_reddit_client(cid, secret, agent):

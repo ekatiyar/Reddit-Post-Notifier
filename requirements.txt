@@ -2,4 +2,4 @@ praw==7.7.1
 prawcore==2.4.0
 apprise==1.9.0
 PyYAML==6.0.2
-requests=2.32.3
+requests==2.32.3

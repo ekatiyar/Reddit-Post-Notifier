@@ -42,8 +42,11 @@ class Client:
                 }
             ]
         }
+        print(f'Sending API Request: ')
         response = requests.post(url, headers=headers, json=data)
+        print(f"Response from OpenAI API: {response.text}")
         if response.status_code == 200:
             return response.json()['choices'][0]['message']['content']
         else:
+            print(f"Error: {response.status_code} - {response.text}")
             return title
