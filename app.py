@@ -22,17 +22,13 @@ def main():
 
     alert_client = alert.Client(alert_config)
     
-    print("Testing notification system: ")
-    title = "[USA-DC] [H] NVIDIA RTX 3090 Ti Founders Edition (FE) [W] Local Cash or PayPal"
-    body = "I am selling one NVIDIA GeForce 3090 Ti Founders Edition (FE) GPU. Original owner. Used for AI/ML side projects here and there.\n\nAsking for $1,200 shipped to CONUS, $1150 local.\n\n[Timestamp Video](https://imgur.com/a/o3OXWUi)\n\n*Replacing an earlier post with a mistake in the title.*"
-    notify(ai_client.generate_title(title, body, ["3090"]), alert_client, "", AlertLevel.NOTIFY)
-    print("Notification sent.")
+    # Run tests using dummy objects
+    print("Running tests...")
+    from test import run_tests
+    run_tests(alert_client, ai_client)
+    print("Tests completed successfully\n")
 
-    print("Testing post filtering")
-    should_filter = ai_client.check_post_valid(title, body, ["5090"])
-    
-
-    print("going to stream submissions")
+    print("Going to stream submissions")
     stream_submissions(reddit_client, subreddits, alert_client, ai_client)
 
 

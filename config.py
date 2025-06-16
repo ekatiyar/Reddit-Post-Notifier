@@ -66,7 +66,7 @@ class SubredditConfig:
         """
         return f"""
             Subreddit Config: 
-            {[sub_str.format(sub, self.include_terms(sub), self.exclude_terms(sub)) for sub in self.subreddits]}
+            {[sub_str.format(subreddit = sub, include_terms = self.include_terms(sub), exclude_terms = self.exclude_terms(sub)) for sub in self.subreddits]}
         """
         
 

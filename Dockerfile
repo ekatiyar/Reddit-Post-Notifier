@@ -16,5 +16,7 @@ COPY ai.py .
 COPY alert.py .
 COPY app.py .
 COPY config.py .
+COPY lib.py .
+COPY test.py .
 
 ENTRYPOINT ["python", "app.py"]

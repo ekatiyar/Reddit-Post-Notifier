@@ -13,7 +13,7 @@ class Client:
     def _startup(self):
         """Test All Alert Destinations"""
         for dest in AlertLevel:
-            self._send_message("Test", "This is a startup message", dest)
+            self._send_message("Test", f"This is a startup message at {dest.value} level", dest)
 
     def _send_message(self, title: str, body: str, dest: AlertLevel):
         apprise_config = self.config.get(dest)

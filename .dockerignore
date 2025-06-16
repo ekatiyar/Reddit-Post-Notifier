@@ -4,4 +4,6 @@
 !alert.py
 !app.py
 !config.py
+!lib.py
 !requirements.txt
+!test.py
