@@ -12,7 +12,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY app.py .
 COPY ai.py .
+COPY alert.py .
+COPY app.py .
+COPY config.py .
 
 ENTRYPOINT ["python", "app.py"]
