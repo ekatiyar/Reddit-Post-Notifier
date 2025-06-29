@@ -81,7 +81,7 @@ def process_submission(submission, sub_config: config.SubredditConfig, alert_cli
         print("Submission non match")
     elif not ai_client.check_post_valid(title, body, include_terms):
         print("ai filtered")
-        notify(title, alert_client, submission.permalink, AlertLevel.FILTER)
+        notify(title, title, alert_client, submission.permalink, AlertLevel.FILTER)
     else:
         print("submission match")
 
@@ -91,13 +91,13 @@ def process_submission(submission, sub_config: config.SubredditConfig, alert_cli
         else:
             print(f"summarized title: {summarized_title}")
 
-        notify(summarized_title, alert_client, submission.permalink, AlertLevel.NOTIFY)
+        notify(summarized_title, title, alert_client, submission.permalink, AlertLevel.NOTIFY)
 
-def notify(title: str, alert_client: alert.Client, submission_id: str, alert_level: AlertLevel):
+def notify(title: str, post_title:str, alert_client: alert.Client, submission_id: str, alert_level: AlertLevel):
     print(f"Sending apprise notification")
 
     reddit_url = "https://www.reddit.com" + submission_id
-    body=f'\n---\nLink to Post: [{title}]({reddit_url})'
+    body=f'\n---\nLink to Post: [{post_title}]({reddit_url})'
     
     match alert_level:
         case AlertLevel.NOTIFY:
